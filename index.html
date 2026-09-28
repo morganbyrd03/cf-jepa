@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CF-JEPA: Improving Robustness of JEPA World Models via Controllability Factorization</title>
+<meta name="description" content="CF-JEPA is a JEPA-style latent world model that factorizes its latent space into controllable and uncontrollable subspaces, staying robust to visual distractors where prior world models collapse." />
+<meta property="og:title" content="CF-JEPA: Controllability Factorized JEPA World Models" />
+<meta property="og:description" content="A JEPA world model that splits its latent space into controllable and uncontrollable parts to resist visual distractors." />
+<meta property="og:image" content="assets/fig/overview.png" />
+<meta property="og:type" content="website" />
+<link rel="stylesheet" href="styles.css" />
+<script>
+window.MathJax = { tex: { inlineMath: [['\\(','\\)']], displayMath: [['$$','$$']] }, svg: { fontCache: 'global' } };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <!-- <div class="venue">Under review · ICRA 2027</div> -->
+    <h1 class="title"><span class="cf">CF-JEPA</span>: Improving Robustness of JEPA World Models via Controllability Factorization</h1>
+    <p class="subtitle">A latent world model that splits its representation into <b>controllable</b> and <b>uncontrollable</b> subspaces — staying robust to visual distractors where prior JEPA world models collapse.</p>
+    <!-- <p class="authors">Anonymous Author(s)</p>
+    <p class="anon-note">Author names and affiliations withheld for double-blind review.</p> -->
+    <div class="links">
+      <a class="btn" href="assets/paper/CF-JEPA.pdf">Paper (PDF)</a>
+      <a class="btn ghost" href="#method">Method</a>
+      <a class="btn ghost" href="#results">Results</a>
+      <a class="btn ghost" href="#rollouts">Rollouts</a>
+      <a class="btn ghost" href="#bibtex">BibTeX</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- OVERVIEW VIDEO -->
+  <section id="video">
+    <!-- <div class="section-kicker">Overview</div> -->
+    <!-- <h2>One minute on CF-JEPA</h2> -->
+    <div class="videoblock">
+      <video controls preload="metadata" poster="assets/fig/tasks.png">
+        <source src="assets/media/overview_video.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+    </div>
+    <!-- <div class="tldr">
+      <div class="card"><div class="big">Only 1</div><div class="lbl">model that never collapses under visual distractors across all tested tasks</div></div>
+      <div class="card"><div class="big">2 subspaces</div><div class="lbl">latent split into controllable \(z^c\) and uncontrollable \(z^u\) information</div></div>
+      <div class="card"><div class="big">&lt; 8 h</div><div class="lbl">to train per task on a single NVIDIA 5090 GPU</div></div>
+    </div> -->
+  </section>
+
+  <!-- ABSTRACT
+  <section id="abstract">
+    <div class="section-kicker">Abstract</div>
+    <h2>Separating what you control from what you don't</h2>
+    <p class="lead">Controlling an agent from vision requires separating useful information from irrelevant background. JEPA-style latent world models seem like a natural fit — they avoid pixel-level reconstruction — yet they remain sensitive to distractor signals and suffer <b>latent collapse</b>. We introduce <b>Controllability Factorized JEPA (CF-JEPA)</b>, which splits the latent space into <b>controllable</b> and <b>uncontrollable</b> subspaces. This factorization funnels distractor information into the uncontrollable region while the control task uses only the control-relevant latent. CF-JEPA matches baselines under nominal conditions and improves performance under distracted conditions, where it is the <b>only</b> tested model that does not collapse. We further validate it on a simulated robot task, highlighting the practical value of the scheme.</p>
+  </section> -->
+
+  <!-- METHOD -->
+  <section id="method">
+    <!-- <div class="section-kicker">Method</div> -->
+    <h2>Controllability factorization</h2>
+    <p class="lead">CF-JEPA builds on the LeWM world model. The encoder \(f\) maps an observation \(x_t\) to a latent \(z_t=[z^c_t, z^u_t]\). An <b>action-conditioned</b> predictor \(g\) advances the controllable part, while an <b>action-free</b> predictor \(h\) advances the uncontrollable part. An <b>inverse-dynamics</b> head \(\psi\) forces \(z^c\) to carry action-relevant information; an <b>adversarial</b> head \(\phi\) (with a gradient-reversal layer) prevents \(z^u\) from predicting actions. A SIGReg term keeps the latent from collapsing.</p>
+
+    <figure>
+      <img class="framed" src="assets/fig/overview.png" alt="CF-JEPA method overview: encoder, controllable and uncontrollable predictors, inverse and adversarial dynamics heads, and the four training losses." />
+      <!-- <figcaption><b>Figure 2.</b> The encoder produces a factorized latent \(z=[z^c,z^u]\). Controllable dynamics \(g\) are action-conditioned; uncontrollable dynamics \(h\) are action-free. Four terms make up the objective.</figcaption> -->
+    </figure>
+
+    <div class="legend">
+      <span class="c">Controllable subspace \(z^c\in\mathbb{R}^{128}\) — used for control</span>
+      <span class="u">Uncontrollable subspace \(z^u\in\mathbb{R}^{64}\) — absorbs distractors</span>
+    </div>
+
+    <p class="lead" style="margin-top:28px">The full objective combines forward prediction, inverse dynamics on \(z^c\), an adversarial term on \(z^u\), and the SIGReg regularizer:</p>
+    <p class="center">$$\mathcal{L}=\mathcal{L}_{\text{fwd}} + \alpha\,\mathcal{L}_{\text{inv}} + \beta\,\mathcal{L}_{\text{adv}} + \gamma\,\mathcal{L}_{\text{SIGReg}}$$</p>
+    <p class="lead center" style="color:var(--muted);font-size:15px">with \(\alpha=1\) and \(\gamma=0.09\) fixed for all tasks, and \(\beta\) the single per-task tuned weight. At planning time, model-predictive control (CEM) optimizes actions using only the controllable latent \(z^c\).</p>
+  </section>
+
+  <!-- TASKS -->
+  <section id="tasks">
+    <!-- <div class="section-kicker">Setup</div> -->
+    <h2>Tasks &amp; visual distractors</h2>
+    <p class="lead">We evaluate on four control tasks — <b>DM Control Reacher</b>, <b>PushT</b>, <b>OGBench Cube</b>, and <b>TwoRoom</b> — plus a simulated ManiSkill robot reach. Robustness is stress-tested by adding \(N\) moving colored rectangles that drift along the image edges without occluding the task.</p>
+    <figure>
+      <img class="framed" src="assets/fig/tasks.png" alt="The four primary evaluation tasks: Reacher, PushT, OGBench Cube, TwoRoom." />
+      <figcaption><b>Figure 1.</b> Primary tasks: DM Control Reacher, PushT, OGBench Cube, and TwoRoom.</figcaption>
+    </figure>
+    <figure>
+      <img class="framed" src="assets/fig/tasks_distractors.png" alt="The same tasks with example moving-rectangle distractors added." />
+      <figcaption><b>Figure 3.</b> The same tasks with example distractors (\(N=2\)).</figcaption>
+    </figure>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="results">
+    <!-- <div class="section-kicker">Results</div> -->
+    <h2>Robust where baselines collapse</h2>
+    <p class="lead">Under nominal conditions CF-JEPA is competitive with LeWM and SMWM. Once distractors are added, LeWM collapses on all tasks and SMWM collapses on Reacher — <b>CF-JEPA is the only model that never collapses.</b> Values are success rate (higher is better); CF-JEPA is reported as mean&nbsp;±&nbsp;std over three seeds.</p>
+
+    <div class="tablewrap">
+      <table>
+        <caption><b>Table II.</b> Nominal task performance (no distractors).</caption>
+        <thead><tr><th>Task</th><th>LeWM</th><th>SMWM</th><th class="cf-col">CF-JEPA</th></tr></thead>
+        <tbody>
+          <tr><td>Reacher</td><td class="best">0.86</td><td>0.66</td><td class="cf-col">0.61 ±0.03</td></tr>
+          <tr><td>PushT</td><td class="best">0.96</td><td>0.83</td><td class="cf-col">0.78 ±0.04</td></tr>
+          <tr><td>OGBench Cube</td><td>0.74</td><td class="best">0.84</td><td class="cf-col">0.81 ±0.03</td></tr>
+          <tr><td>TwoRoom</td><td>0.87</td><td class="best">0.99</td><td class="cf-col">0.95 ±0.04</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <caption><b>Table III.</b> Performance under the standard distractor setting (\(N=2\)).</caption>
+        <thead><tr><th>Task</th><th>LeWM</th><th>SMWM</th><th class="cf-col">CF-JEPA</th></tr></thead>
+        <tbody>
+          <tr><td>Reacher</td><td>0.07 ±0.05</td><td>0.10 ±0.03</td><td class="cf-col best">0.48 ±0.12</td></tr>
+          <tr><td>PushT</td><td>0.01 ±0.01</td><td>0.86 ±0.02</td><td class="cf-col best">0.87 ±0.03</td></tr>
+          <tr><td>OGBench Cube</td><td>0.42 ±0.02</td><td>0.84 ±0.01</td><td class="cf-col best">0.85 ±0.02</td></tr>
+          <tr><td>TwoRoom</td><td>0.33 ±0.03</td><td class="best">0.98 ±0.05</td><td class="cf-col">0.95 ±0.03</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="lead" style="margin-top:34px">LeWM already fails at \(N=2\), so it is only reported there; runs continue up to the point SMWM collapses. CF-JEPA never collapses.</p>
+    <div class="tablewrap">
+      <table>
+        <caption><b>Table IV.</b> Task performance as the number of distractors \(N\) increases. Best per row in <span style="color:var(--accent);font-weight:700">orange</span>.</caption>
+        <thead><tr><th>Task</th><th>\(N\)</th><th>LeWM</th><th>SMWM</th><th class="cf-col">CF-JEPA</th></tr></thead>
+        <tbody>
+          <tr class="grp"><td>Reacher</td><td>2</td><td>0.08</td><td>0.10 ±0.03</td><td class="cf-col best">0.48 ±0.12</td></tr>
+
+          <tr class="grp"><td>PushT</td><td>2</td><td>0.01</td><td>0.86 ±0.02</td><td class="cf-col best">0.87 ±0.03</td></tr>
+          <tr><td></td><td>16</td><td>—</td><td>0.36 ±0.36</td><td class="cf-col best">0.76</td></tr>
+          <tr><td></td><td>32</td><td>—</td><td>0.57 ±0.01</td><td class="cf-col best">0.68 ±0.06</td></tr>
+          <tr><td></td><td>64</td><td>—</td><td>0.27 ±0.25</td><td class="cf-col best">0.57 ±0.01</td></tr>
+
+          <tr class="grp"><td>OGBench Cube</td><td>2</td><td>0.41</td><td>0.84 ±0.01</td><td class="cf-col best">0.85 ±0.02</td></tr>
+          <tr><td></td><td>32</td><td>—</td><td>0.80 ±0.02</td><td class="cf-col best">0.81 ±0.01</td></tr>
+          <tr><td></td><td>64</td><td>—</td><td>0.70 ±0.05</td><td class="cf-col best">0.73 ±0.01</td></tr>
+          <tr><td></td><td>128</td><td>—</td><td class="best">0.73 ±0.05</td><td class="cf-col">0.70 ±0.02</td></tr>
+
+          <tr class="grp"><td>TwoRoom</td><td>2</td><td>0.34 ±0.05</td><td class="best">0.98 ±0.05</td><td class="cf-col">0.95 ±0.03</td></tr>
+          <tr><td></td><td>8</td><td>—</td><td class="best">1.00 ±0.00</td><td class="cf-col">0.97 ±0.01</td></tr>
+          <tr><td></td><td>16</td><td>—</td><td>0.60 ±0.28</td><td class="cf-col best">0.94 ±0.00</td></tr>
+          <tr><td></td><td>32</td><td>—</td><td>0.46 ±0.12</td><td class="cf-col best">0.82 ±0.00</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ROLLOUTS -->
+  <section id="rollouts">
+    <!-- <div class="section-kicker">Qualitative</div> -->
+    <h2>Planning rollouts under distractors</h2>
+    <p class="lead">Rollouts on Reacher with distractors (\(N=2\)). CF-JEPA reaches the target; both LeWM and SMWM collapse and lose track of the arm.</p>
+    <div class="grid3">
+      <div class="media">
+        <img src="assets/media/cf_reacher_d2.gif" alt="CF-JEPA Reacher rollout with distractors." loading="lazy" />
+        <div class="cap"><b>CF-JEPA</b><span class="tag ok">reaches target</span></div>
+      </div>
+      <div class="media">
+        <img src="assets/media/smwm_reacher_d2.gif" alt="SMWM Reacher rollout with distractors." loading="lazy" />
+        <div class="cap"><b>SMWM</b><span class="tag fail">collapses</span></div>
+      </div>
+      <div class="media">
+        <img src="assets/media/lewm_reacher_d2.gif" alt="LeWM Reacher rollout with distractors." loading="lazy" />
+        <div class="cap"><b>LeWM</b><span class="tag fail">collapses</span></div>
+      </div>
+    </div>
+
+    <p class="lead" style="margin-top:34px">Increasing distractor density on PushT (\(N=16\)): CF-JEPA holds up, while SMWM fails.</p>
+    <div class="grid2">
+      <div class="media">
+        <img src="assets/media/cf_pusht_n16_HOLD.gif" alt="CF-JEPA PushT rollout at N=16 distractors." loading="lazy" />
+        <div class="cap"><b>CF-JEPA</b> · PushT at \(N=16\)<span class="tag ok">solves</span></div>
+      </div>
+      <div class="media">
+        <img src="assets/media/smwm_pusht_n16_FAIL.gif" alt="SMWM PushT rollout failing at N=16 distractors." loading="lazy" />
+        <div class="cap"><b>SMWM</b> · PushT at \(N=16\)<span class="tag fail">fails</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LATENT ANALYSIS -->
+  <section id="latent">
+    <!-- <div class="section-kicker">Analysis</div> -->
+    <h2>What each subspace remembers</h2>
+    <p class="lead">Decoding frozen encoders (trained with distractors) back to pixels on clean Reacher frames shows the factorization at work: CF-JEPA's controllable latent \(z^c\) reconstructs the arm, its uncontrollable latent \(z^u\) does not, and both baselines have lost the agent entirely to collapse.</p>
+    <div class="grid2">
+      <div class="media"><img src="assets/fig/recon_cf_zc.png" alt="CF-JEPA controllable latent reconstruction of the Reacher arm." loading="lazy" /><div class="cap"><b>CF-JEPA \(z^c\)</b> — arm reconstructed<span class="tag ok">retains agent</span></div></div>
+      <div class="media"><img src="assets/fig/recon_cf_zu.png" alt="CF-JEPA uncontrollable latent, unable to reconstruct the arm." loading="lazy" /><div class="cap"><b>CF-JEPA \(z^u\)</b> — arm blurred away</div></div>
+      <div class="media"><img src="assets/fig/recon_smwm.png" alt="SMWM reconstruction, collapsed." loading="lazy" /><div class="cap"><b>SMWM</b><span class="tag fail">collapsed</span></div></div>
+      <div class="media"><img src="assets/fig/recon_lewm.png" alt="LeWM reconstruction, collapsed." loading="lazy" /><div class="cap"><b>LeWM</b><span class="tag fail">collapsed</span></div></div>
+    </div>
+    <figcaption style="margin-top:16px"><b>Figure 5.</b> Only the controllable latent of CF-JEPA retains the agent under distractor training.</figcaption>
+
+    <p class="lead" style="margin-top:30px">We quantify collapse with the <b>participation ratio</b> of the latent, computed from the eigenvalues \(\lambda_i\) of the embedding covariance over 256 random frames — a higher value means variance is spread across more dimensions, while total collapse drives it to 1:</p>
+    <p class="center">$$\mathrm{PR}=\frac{\left(\sum_{i=1}^{d}\lambda_i\right)^{2}}{\sum_{i=1}^{d}\lambda_i^{2}}$$</p>
+
+    <div class="tablewrap" style="max-width:620px;margin-left:auto;margin-right:auto">
+      <table>
+        <caption><b>Table VI.</b> Latent participation ratio on Reacher (higher = more spread; collapse → 1).</caption>
+        <thead><tr><th>Condition</th><th>LeWM</th><th>SMWM</th><th class="cf-col">CF-JEPA</th></tr></thead>
+        <tbody>
+          <tr><td>Nominal</td><td>48.2 ±0.8</td><td>3.71 ±0.07</td><td class="cf-col">42.3 ±0.1</td></tr>
+          <tr><td>Distractor (\(N=2\))</td><td>2.24 ±0.23</td><td>1.00 ±0.01</td><td class="cf-col best">12.9 ±0.35</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- <div class="grid2" style="margin-top:34px">
+      <div class="media"><img src="assets/media/smwm_n64_collapse.gif" alt="SMWM latent collapse under heavy distractors." loading="lazy" /><div class="cap"><b>SMWM</b> latent collapse under heavy distractors<span class="tag fail">collapse</span></div></div>
+      <div class="media"><img src="assets/media/CF_agents_grouped.gif" alt="CF-JEPA agents across tasks." loading="lazy" /><div class="cap"><b>CF-JEPA</b> agents across tasks</div></div>
+    </div> -->
+  </section>
+
+  <!-- MANISKILL -->
+  <section id="robot">
+    <!-- <div class="section-kicker">Robot task</div> -->
+    <h2>Perception-dependent ManiSkill reach</h2>
+    <p class="lead">On a simplified ManiSkill reach that uses joint-position control — so the agent must perceive its own arm — CF-JEPA's advantage widens as the success threshold tightens, exactly where precise perception matters most (\(N=16\) distractors, mean&nbsp;±&nbsp;std over three seeds).</p>
+    <figure>
+      <img class="framed" src="assets/fig/maniskill_reach.png" alt="Simplified ManiSkill reach task." style="max-width:320px;display:block;margin:0 auto" />
+      <figcaption><b>Figure 4.</b> Simplified ManiSkill reach used for distractor evaluation.</figcaption>
+    </figure>
+    <div class="tablewrap">
+      <table>
+        <caption><b>Table V.</b> Success rate at increasingly tight goal thresholds (\(N=16\) distractors).</caption>
+        <thead><tr><th>Threshold (m)</th><th>LeWM</th><th>SMWM</th><th class="cf-col">CF-JEPA</th></tr></thead>
+        <tbody>
+          <tr><td>0.06 (easiest)</td><td>0.55 ±0.04</td><td>0.79 ±0.05</td><td class="cf-col best">0.83 ±0.06</td></tr>
+          <tr><td>0.05</td><td>0.51 ±0.05</td><td>0.62 ±0.04</td><td class="cf-col best">0.72 ±0.08</td></tr>
+          <tr><td>0.04</td><td>0.44 ±0.03</td><td>0.58 ±0.02</td><td class="cf-col best">0.64 ±0.10</td></tr>
+          <tr><td>0.03</td><td>0.36 ±0.03</td><td>0.38 ±0.02</td><td class="cf-col best">0.53 ±0.14</td></tr>
+          <tr><td>0.025</td><td>0.32 ±0.06</td><td>0.30 ±0.04</td><td class="cf-col best">0.48 ±0.17</td></tr>
+          <tr><td>0.02 (hardest)</td><td>0.21 ±0.05</td><td>0.22 ±0.04</td><td class="cf-col best">0.35 ±0.12</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- BIBTEX -->
+  <section id="bibtex">
+    <!-- <div class="section-kicker">Cite</div> -->
+    <h2>BibTeX</h2>
+    <div class="copybar">
+      <!-- <span style="color:var(--muted);font-size:14px">Reference for the CF-JEPA paper</span> -->
+      <button class="copybtn" onclick="copyBib()">Copy</button>
+    </div>
+<pre class="bibtex" id="bib">@inproceedings{cfjepa2027,
+  title     = {CF-JEPA: Improving Robustness of JEPA World Models
+               via Controllability Factorization},
+  author    = {Anonymous Author(s)},
+  booktitle = {IEEE International Conference on Robotics and Automation (ICRA)},
+  year      = {2027},
+  note      = {Under review}
+}</pre>
+    <!-- <p class="lead" style="font-size:15px;color:var(--muted)">CF-JEPA builds on <b>LeWM</b> (LeWorldModel) and compares against <b>SMWM</b> (Sensorimotor World Models). See the paper for full references.</p> -->
+  </section>
+
+</main>
+
+<!-- <footer>
+  <div class="wrap">
+    <p>Project website for the ICRA 2027 submission <b>CF-JEPA</b>. Media and figures are from the paper and its supplementary rollouts.</p>
+    <p>Anonymized for double-blind review.</p>
+  </div>
+</footer> -->
+
+<script>
+function copyBib(){
+  const t = document.getElementById('bib').innerText;
+  navigator.clipboard.writeText(t).then(()=>{
+    const b=document.querySelector('.copybtn'); const o=b.innerText; b.innerText='Copied ✓';
+    setTimeout(()=>b.innerText=o,1500);
+  });
+}
+</script>
+</body>
+</html>

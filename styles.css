@@ -1,0 +1,138 @@
+:root {
+  --bg: #ffffff;
+  --fg: #1a1d24;
+  --muted: #5c6472;
+  --line: #e6e8ee;
+  --accent: #1e4fa3;      /* site accent (darker blue) */
+  --accent2: #7c3aed;     /* secondary accent (purple) */
+  --controllable: #F6C5AC;   /* matches Fig. 2 legend swatch */
+  --uncontrollable: #E49EDD; /* matches Fig. 2 legend swatch */
+  --accent-soft: #eaf1fb;
+  --card: #f7f8fb;
+  --maxw: 980px;
+  --radius: 14px;
+  --shadow: 0 1px 2px rgba(20,24,40,.04), 0 8px 30px rgba(20,24,40,.06);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+  line-height: 1.65;
+  font-size: 17px;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 22px; }
+
+/* ---------- Hero ---------- */
+header.hero {
+  padding: 66px 0 30px;
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+  background:
+    radial-gradient(900px 340px at 20% -10%, rgba(30,79,163,.10), transparent 60%),
+    radial-gradient(900px 340px at 85% -20%, rgba(124,58,237,.08), transparent 60%);
+}
+.venue {
+  font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--accent); font-weight: 700; margin-bottom: 14px;
+}
+h1.title {
+  font-size: clamp(29px, 5vw, 46px);
+  line-height: 1.12; margin: 0 auto 10px; max-width: 900px; font-weight: 800;
+  letter-spacing: -.015em;
+}
+h1.title .cf { color: var(--accent); }
+.subtitle { color: var(--muted); font-size: clamp(16px,2.4vw,20px); margin: 0 auto 22px; max-width: 720px; }
+.authors { font-size: 17px; margin: 6px 0 4px; }
+.affil { color: var(--muted); font-size: 14.5px; margin-bottom: 4px; }
+.anon-note { color: var(--muted); font-size: 13px; font-style: italic; }
+
+.links { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 26px 0 4px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px; border-radius: 999px; text-decoration: none;
+  font-weight: 600; font-size: 15px; border: 1px solid var(--fg);
+  color: #fff; background: var(--fg); transition: transform .12s ease, box-shadow .12s ease, opacity .12s;
+}
+.btn:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.btn.ghost { background: #fff; color: var(--fg); }
+.btn .ico { font-size: 16px; }
+
+/* ---------- Sections ---------- */
+main { padding: 10px 0 40px; }
+section { padding: 46px 0; border-bottom: 1px solid var(--line); }
+section:last-child { border-bottom: 0; }
+h2 {
+  font-size: 27px; font-weight: 800; letter-spacing: -.01em; margin: 0 0 6px;
+  text-align: center;
+}
+.section-kicker { text-align:center; color: var(--accent); font-weight:700; font-size:13px; letter-spacing:.12em; text-transform:uppercase; margin-bottom: 8px; }
+.lead { max-width: 760px; margin: 12px auto 0; color: var(--fg); }
+.center { text-align: center; }
+figure { margin: 26px 0 0; }
+figure img { width: 100%; height: auto; border-radius: var(--radius); }
+figcaption { color: var(--muted); font-size: 14px; margin-top: 12px; text-align: center; }
+.framed { border: 1px solid var(--line); box-shadow: var(--shadow); background:#fff; padding: 10px; }
+
+/* ---------- Highlight chips ---------- */
+.tldr { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 28px; }
+.tldr .card {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 20px; text-align: center;
+}
+.tldr .big { font-size: 30px; font-weight: 800; color: var(--accent); line-height: 1.1; }
+.tldr .lbl { color: var(--muted); font-size: 14.5px; margin-top: 6px; }
+
+/* ---------- Legend ---------- */
+.legend { display:flex; gap:22px; justify-content:center; margin-top:18px; flex-wrap:wrap; font-size:14.5px; color:var(--muted); }
+.legend span::before { content:""; display:inline-block; width:13px; height:13px; border-radius:3px; margin-right:7px; vertical-align:middle; border:1px solid rgba(20,24,40,.18); }
+.legend .c::before { background: var(--controllable); }
+.legend .u::before { background: var(--uncontrollable); }
+
+/* ---------- Tables ---------- */
+.tablewrap { overflow-x: auto; margin-top: 22px; }
+table { border-collapse: collapse; width: 100%; font-size: 15.5px; }
+caption { caption-side: top; text-align: left; color: var(--muted); font-size: 14px; margin-bottom: 10px; }
+th, td { padding: 9px 14px; text-align: center; border-bottom: 1px solid var(--line); }
+th:first-child, td:first-child { text-align: left; }
+thead th { border-bottom: 2px solid var(--fg); font-weight: 700; }
+tbody tr:hover { background: var(--accent-soft); }
+td.best { font-weight: 800; color: var(--accent); }
+.cf-col { background: rgba(30,79,163,.06); }
+tr.grp td { border-top: 2px solid #c7ccd8; }
+td:nth-child(2) { color: var(--muted); }
+
+/* ---------- Media grids ---------- */
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 26px; }
+.grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; margin-top: 26px; }
+.media { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.media img, .media video { width: 100%; display: block; background:#0e1116; }
+.media .cap { padding: 10px 14px; font-size: 14px; color: var(--muted); text-align: center; }
+.media .cap b { color: var(--fg); }
+.tag { display:inline-block; font-size:12px; font-weight:700; padding:2px 8px; border-radius:999px; margin-left:6px; }
+.tag.ok { background:#e7f6ec; color:#1a7f45; }
+.tag.fail { background:#fdeaea; color:#c0392b; }
+
+.videoblock { max-width: 760px; margin: 26px auto 0; }
+.videoblock video { width:100%; border-radius: var(--radius); box-shadow: var(--shadow); display:block; }
+
+/* ---------- BibTeX ---------- */
+pre.bibtex {
+  background: #0e1116; color: #e6e8ee; border-radius: var(--radius); padding: 20px 22px;
+  overflow-x: auto; font-size: 13.5px; line-height: 1.6; margin-top: 18px;
+}
+.copybar { display:flex; justify-content:space-between; align-items:center; margin-top: 8px; }
+.copybtn { cursor:pointer; font-size:13px; border:1px solid var(--line); background:#fff; border-radius:8px; padding:6px 12px; }
+
+footer { padding: 34px 0 60px; text-align: center; color: var(--muted); font-size: 14px; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 760px) {
+  .tldr, .grid3 { grid-template-columns: 1fr; }
+  .grid2 { grid-template-columns: 1fr; }
+  section { padding: 36px 0; }
+}
