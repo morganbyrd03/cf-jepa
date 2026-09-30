@@ -24,6 +24,15 @@ window.MathJax = { tex: { inlineMath: [['\\(','\\)']], displayMath: [['$$','$$']
     <p class="subtitle">A latent world model that splits its representation into <b>controllable</b> and <b>uncontrollable</b> subspaces — staying robust to visual distractors where prior JEPA world models collapse.</p>
     <!-- <p class="authors">Anonymous Author(s)</p>
     <p class="anon-note">Author names and affiliations withheld for double-blind review.</p> -->
+    <div class="authors">
+      <span class="author"><a href="https://morganbyrd03.github.io" target="_blank">Morgan Byrd</a><sup>1</sup></span>
+      <span class="author"><a href="https://www.linkedin.com/in/robert-wright-690764b0" target="_blank">Robert Wright</a><sup>2</sup></span>
+      <span class="author"><a href="https://faculty.cc.gatech.edu/~sha9/" target="_blank">Sehoon Ha</a><sup>1</sup></span>
+    </div>
+    <div class="affils">
+      <span><sup>1</sup>Georgia Institute of Technology</span>
+      <span><sup>2</sup>Georgia Tech Research Institute</span>
+    </div>
     <div class="links">
       <a class="btn" href="assets/paper/CF-JEPA.pdf">Paper (PDF)</a>
       <!-- <a class="btn ghost" href="#method">Method</a>
@@ -128,7 +137,7 @@ window.MathJax = { tex: { inlineMath: [['\\(','\\)']], displayMath: [['$$','$$']
       </table>
     </div>
 
-    <p class="lead" style="margin-top:34px">LeWM already fails at \(N=2\), so it is only reported there; runs continue up to the point SMWM collapses. CF-JEPA never collapses.</p>
+    <!-- <p class="lead" style="margin-top:34px">LeWM already fails at \(N=2\), so it is only reported there; runs continue up to the point SMWM collapses. CF-JEPA never collapses.</p> -->
     <div class="tablewrap">
       <table>
         <caption><b>Table IV.</b> Task performance as the number of distractors \(N\) increases. Best per row in <span style="color:var(--accent);font-weight:700">orange</span>.</caption>
@@ -225,7 +234,7 @@ window.MathJax = { tex: { inlineMath: [['\\(','\\)']], displayMath: [['$$','$$']
   <section id="robot">
     <!-- <div class="section-kicker">Robot task</div> -->
     <h2>Perception-dependent ManiSkill reach</h2>
-    <p class="lead">On a simplified ManiSkill reach that uses joint-position control — so the agent must perceive its own arm — CF-JEPA's advantage widens as the success threshold tightens, exactly where precise perception matters most (\(N=16\) distractors, mean&nbsp;±&nbsp;std over three seeds).</p>
+    <!-- <p class="lead">On a simplified ManiSkill reach that uses joint-position control — so the agent must perceive its own arm — CF-JEPA's advantage widens as the success threshold tightens, exactly where precise perception matters most (\(N=16\) distractors, mean&nbsp;±&nbsp;std over three seeds).</p> -->
     <figure>
       <img class="framed" src="assets/fig/maniskill_reach.png" alt="Simplified ManiSkill reach task." style="max-width:320px;display:block;margin:0 auto" />
       <figcaption><b>Figure 4.</b> Simplified ManiSkill reach used for distractor evaluation.</figcaption>
