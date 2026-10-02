@@ -47,7 +47,18 @@ h1.title {
 }
 h1.title .cf { color: var(--accent); }
 .subtitle { color: var(--muted); font-size: clamp(16px,2.4vw,20px); margin: 0 auto 22px; max-width: 720px; }
-.authors { font-size: 17px; margin: 6px 0 4px; }
+.authors {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 28px;
+  font-size: 18px; font-weight: 600; margin: 6px 0 8px;
+}
+.author a { color: var(--fg); text-decoration: none; border-bottom: 1px solid transparent; transition: color .12s, border-color .12s; }
+.author a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.authors sup, .affils sup { font-size: .62em; font-weight: 600; color: var(--accent); margin-left: 1px; }
+.affils {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 24px;
+  color: var(--muted); font-size: 14.5px; margin-bottom: 4px;
+}
+.affils sup { margin: 0 2px 0 0; }
 .affil { color: var(--muted); font-size: 14.5px; margin-bottom: 4px; }
 .anon-note { color: var(--muted); font-size: 13px; font-style: italic; }
 
